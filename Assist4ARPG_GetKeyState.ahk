@@ -7,16 +7,25 @@
 
 ProcessKey(KeyName, UD)
 {
-	if (StrLen(KeyName) <= 0)
+	try 
 	{
-		return 
+		if (StrLen(KeyName) <= 0)
+		{
+			sleep, -1 
+			
+			return 
+		}
+		
+		ChkState := (InStr(UD, "Up") > 0) ? true : false
+		
+		if (ChkState == GetKeyState(KeyName))
+		{
+			Send, {Blind}{%KeyName% %UD%}
+		}
 	}
-	
-	ChkState := (InStr(UD, "Up") > 0) ? true : false
-	
-	if (ChkState == GetKeyState(KeyName))
+	catch 
 	{
-		Send, {Blind}{%KeyName% %UD%}
+		sleep, -1
 	}
 }
 
@@ -47,10 +56,15 @@ KeyNameList := Array()
 
 LoopEnabled := "Off" 
 ; Variable 
+
 while, true 
 {
 	try
-	{
+	{	
+		SetScrollLockState, Off 
+		
+		SetCapsLockState, Off 
+		
 		SetTimer, KeyWatcher, 5
 		 
 		SetTimer, LockChecker, 5
@@ -63,13 +77,11 @@ while, true
 
 		SetTimer, MoveLoop, Off 
 
-		SetCapsLockState, Off 
-
-		SetScrollLockState, Off 
-		
 		break 
 	}
 	catch {
+		Sleep, -1 
+		
 		continue
 	}
 }
@@ -77,28 +89,29 @@ return
 ; Autoexec 
 
 ReleaseChk:
+try 
 {
-	if (true == GetKeyState("LButton") && true == GetKeyState("RButton"))
-	{
-		ProcessKey("LButton", "Up")
-		
-		ProcessKey("RButton", "Up") 
-	}
-	
 	For idx, KeyName in KeyNameList
 	{
-		if (false == GetKeyState(KeyName, "P"))
+		if (false == GetKeyState(KeyName, "P") && true == GetKeyState(KeyName))
 		{
-			ProcessKey(KeyName, "Up")
+			Send, {Blind}{%KeyName% Up} 
 		}
 	}
+}
+catch 
+{
+	sleep, -1 
 }
 return 
 
 PressChk:
+try 
 {
-	if (true != GetKeyState(LockKey, "T")) 
+	if (true != GetKeyState(LockKey, "T"))
 	{
+		sleep, -1 
+		
 		return 
 	}
 	
@@ -109,15 +122,22 @@ PressChk:
 			Send, {Blind}{%KeyName% Down} 
 		}
 	}
+}	
+catch 
+{
+	sleep, -1
 }
 return 
 
 MoveLoop:
+try 
 {
 	MoveKey := "LButton"
-
+	
 	if (A_IsSuspended)
 	{
+		Sleep, -1
+		
 		return 
 	}
 
@@ -137,6 +157,10 @@ MoveLoop:
 
 	ProcessKey(MoveKey, "Down")
 }
+catch 
+{
+	sleep, -1 
+}
 return 
 
 LockChecker:
@@ -148,45 +172,42 @@ LockChecker:
 return 
 
 KeyWatcher:
-while, true 
+try
 {
-	try
+	SomethingPressed := false 
+
+	For idx, KeyName in KeyNameList 
 	{
-		SomethingPressed := false 
-
-		For idx, KeyName in KeyNameList 
-		{
-			ThisKeyCheck := GetKeyState(KeyName, "P")
-			
-			ThisKeyPressed := true == ThisKeyCheck
-			
-			SomethingPressed := SomethingPressed || ThisKeyPressed 
-			
-		}
-
-		isLoopOn := (SomethingPressed) ? "Off" : "On"
-
-		if (InStr(LoopEnabled, isLoopOn) <= 0)
-		{
-			SetTimer, MoveLoop, %isLoopOn%
-			
-			LoopEnabled := isLoopOn
-		}
-
-		if (true != GetKeyState(LockKey, "T"))
-		{
-			return
-		}
-
-		isFortNeed := (SomethingPressed) ? "Down" : "Up"
-
-		ProcessKey(FortKey, isFortNeed)
+		ThisKeyCheck := GetKeyState(KeyName, "P")
 		
-		break 
+		ThisKeyPressed := true == ThisKeyCheck
+		
+		SomethingPressed := SomethingPressed || ThisKeyPressed 
+		
 	}
-	catch {
-		continue 
+
+	isLoopOn := (SomethingPressed) ? "Off" : "On"
+
+	if (InStr(LoopEnabled, isLoopOn) <= 0)
+	{
+		SetTimer, MoveLoop, %isLoopOn%
+		
+		LoopEnabled := isLoopOn
 	}
+
+	if (true != GetKeyState(LockKey, "T"))
+	{
+		Sleep, -1 
+		
+		return
+	}
+
+	isFortNeed := (SomethingPressed) ? "Down" : "Up"
+
+	ProcessKey(FortKey, isFortNeed)
+}
+catch {
+	Sleep, -1 
 }
 return 
 ; Loop
@@ -195,15 +216,15 @@ return
 {
 	if (false != GetKeyState(LockKey, "T"))
 	{
+		Sleep, -1 
+		
 		return 
 	}
 	
 	Send, {Blind}{%FortKey% Up}
-	;ProcessKey(FortKey, "Up")
-
+	
 	Send, {Blind}{%MoveKey% Up}
-	;ProcessKey(MoveKey, "Up")
-
+	
 	KeyNameList := Array() 
 }
 return 

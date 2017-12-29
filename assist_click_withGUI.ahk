@@ -6,13 +6,13 @@ SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
 RapidCnt := 5
 PeriodMain := 1000 / RapidCnt 
 KeyLists := ["LButton", "RButton", "1", "2", "3", "4", "5", "q", "w", "e", "r", "t"] 
-MoveKey := "LButton "
+MoveKey := "LButton"
 #Persistent 
 SetCapsLockState, Off 
 SetTimer, MainRunning, %PeriodMain% 
 Menu, Tray, add
 For i, k in KeyLists {
-	Menu, MoveKey, add, %k%, MenuHandler
+	Menu, MoveKey, add, %k%, MenuHandler, Radio
 }
 Menu, Tray, add, MoveKey, :MoveKey
 Menu, Tray, add, SetRapidCnt, RapidHandler
